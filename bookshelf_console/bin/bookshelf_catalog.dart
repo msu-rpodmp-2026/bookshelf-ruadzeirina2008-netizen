@@ -131,8 +131,10 @@ void printAll(List<Book> books, {String emptyMessage = 'Ничего не най
   for (var i = 0; i < books.length; i++) {
     final book = books[i];
     final mark = (book['read'] == true) ? '[+]' : '[ ]';
-    print('${i + 1}. $mark «${book['title']}» — ${book['author']}, '
-        '${book['year']} г., ${book['pages']} стр., жанр: ${book['genre']}');
+    print(
+      '${i + 1}. $mark «${book['title']}» — ${book['author']}, '
+      '${book['year']} г., ${book['pages']} стр., жанр: ${book['genre']}',
+    );
   }
 }
 
@@ -214,14 +216,11 @@ void printStatistics(List<Book> books) {
   final genres = books.map((b) => b['genre'].toString()).toSet().toList();
 
   // Количество книг по каждому жанру (Map<String, int>) — через fold, без for
-  final byGenre = books.fold<Map<String, int>>(
-    <String, int>{},
-    (map, b) {
-      final g = b['genre'].toString();
-      map[g] = (map[g] ?? 0) + 1;
-      return map;
-    },
-  );
+  final byGenre = books.fold<Map<String, int>>(<String, int>{}, (map, b) {
+    final g = b['genre'].toString();
+    map[g] = (map[g] ?? 0) + 1;
+    return map;
+  });
 
   // Доля прочитанного в процентах
   final readPercent = (readCount / total) * 100;
@@ -258,8 +257,10 @@ int askInt(String prompt, {int min = 0, int? max}) {
     stdout.write('$prompt: ');
     value = int.tryParse(stdin.readLineSync(encoding: utf8) ?? '');
     if (value == null || value < min || (max != null && value > max)) {
-      print('Некорректное значение. Ожидается целое число'
-          '${max == null ? ' не меньше $min' : ' от $min до $max'}.');
+      print(
+        'Некорректное значение. Ожидается целое число'
+        '${max == null ? ' не меньше $min' : ' от $min до $max'}.',
+      );
       value = null;
     }
   } while (value == null);
@@ -296,9 +297,11 @@ void addBook(List<Book> books) {
   }
 
   stdout.write('Прочитана? (1 - да, 0 - нет): ');
-  final readAnswer =
-      (stdin.readLineSync(encoding: utf8) ?? '').trim().toLowerCase();
-  final read = readAnswer == 'да' ||
+  final readAnswer = (stdin.readLineSync(encoding: utf8) ?? '')
+      .trim()
+      .toLowerCase();
+  final read =
+      readAnswer == 'да' ||
       readAnswer == '1' ||
       readAnswer == 'yes' ||
       readAnswer == 'y';
@@ -332,12 +335,11 @@ void deleteBook(List<Book> books) {
 
   final book = books[index - 1];
   stdout.write('Удалить «${book['title']}»? (1 - да, 0 - нет): ');
-  final answer =
-      (stdin.readLineSync(encoding: utf8) ?? '').trim().toLowerCase();
-  final confirm = answer == 'да' ||
-      answer == '1' ||
-      answer == 'yes' ||
-      answer == 'y';
+  final answer = (stdin.readLineSync(encoding: utf8) ?? '')
+      .trim()
+      .toLowerCase();
+  final confirm =
+      answer == 'да' || answer == '1' || answer == 'yes' || answer == 'y';
 
   if (confirm) {
     books.removeAt(index - 1);
@@ -397,12 +399,11 @@ void main() {
 
       case '5':
         stdout.write('Показать прочитанные? (1 - да, 0 - нет): ');
-        final answer =
-            (stdin.readLineSync(encoding: utf8) ?? '').trim().toLowerCase();
-        final isRead = answer == 'да' ||
-            answer == '1' ||
-            answer == 'yes' ||
-            answer == 'y';
+        final answer = (stdin.readLineSync(encoding: utf8) ?? '')
+            .trim()
+            .toLowerCase();
+        final isRead =
+            answer == 'да' || answer == '1' || answer == 'yes' || answer == 'y';
         printAll(
           filterByRead(library, isRead),
           emptyMessage: isRead
@@ -415,9 +416,11 @@ void main() {
         stdout.write('Сортировать по (title/author/year/pages): ');
         final field = (stdin.readLineSync(encoding: utf8) ?? '').trim();
         stdout.write('По убыванию? (1 - да, 0 - нет): ');
-        final descAnswer =
-            (stdin.readLineSync(encoding: utf8) ?? '').trim().toLowerCase();
-        final descending = descAnswer == 'да' ||
+        final descAnswer = (stdin.readLineSync(encoding: utf8) ?? '')
+            .trim()
+            .toLowerCase();
+        final descending =
+            descAnswer == 'да' ||
             descAnswer == '1' ||
             descAnswer == 'yes' ||
             descAnswer == 'y';
