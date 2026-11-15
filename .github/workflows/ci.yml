@@ -23,6 +23,73 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Без этой проверки работа со сбитой структурой проходит «зелёной»:
+      # все шаги ниже включаются условием hashFiles(...), и если проект лежит
+      # не там, где ожидается, они просто пропускаются — ни форматирование,
+      # ни анализ, ни тесты не выполняются. Проверка стоит до установки SDK,
+      # чтобы не тратить минуты Actions впустую.
+      - name: Структура репозитория
+        run: |
+          console=0; flutter_app=0
+          [ -f bookshelf_console/pubspec.yaml ] && console=1
+          [ -f bookshelf/pubspec.yaml ] && flutter_app=1
+
+          # Flutter-проект в каталоге с другим именем шаги ниже просто не
+          # увидят: они включаются условием hashFiles('bookshelf/pubspec.yaml').
+          # Работа пройдёт «зелёной», ни разу не проверенной — при том, что
+          # консольный проект на месте и первая часть проверки довольна.
+          misplaced=""
+          for p in */pubspec.yaml; do
+            [ -f "$p" ] || continue
+            d="${p%/pubspec.yaml}"
+            if [ "$d" != "bookshelf" ] \
+               && grep -q '^[[:space:]]*sdk:[[:space:]]*flutter[[:space:]]*$' "$p"; then
+              misplaced="$misplaced $d"
+            fi
+          done
+
+          if [ -n "$misplaced" ]; then
+            echo "::error::Flutter-проект лежит не в bookshelf/, а в:$misplaced"
+            echo
+            echo "Проверки Flutter-проекта привязаны к bookshelf/pubspec.yaml."
+            echo "Пока каталог называется иначе, не выполняется ничего:"
+            echo "ни форматирование, ни flutter analyze, ни тесты."
+            echo
+            echo "Приведите имя в порядок:"
+            for d in $misplaced; do
+              echo "  git mv $d bookshelf"
+            done
+            echo "  # в bookshelf/pubspec.yaml замените name: на bookshelf"
+            echo "  # и поправьте импорты package:<старое имя>/... на package:bookshelf/..."
+            exit 1
+          fi
+
+          if [ "$console" = 1 ] || [ "$flutter_app" = 1 ]; then
+            echo "Найдены проекты: console=$console flutter=$flutter_app"
+            exit 0
+          fi
+
+          echo "::error::Не найден ни bookshelf_console/pubspec.yaml, ни bookshelf/pubspec.yaml — проверять нечего."
+          echo
+          echo "Проекты курса должны лежать в отдельных каталогах:"
+          echo "  bookshelf_console/   занятия 1-5   (dart create bookshelf_console)"
+          echo "  bookshelf/           занятия 6-13  (flutter create bookshelf)"
+          echo
+
+          if [ -f pubspec.yaml ]; then
+            name="$(sed -n 's/^name:[[:space:]]*//p' pubspec.yaml | head -1)"
+            echo "В корне репозитория найден pubspec.yaml (name: ${name:-?})."
+            echo "Похоже, проект создан прямо в корне. Перенесите его:"
+            echo
+            echo "  mkdir bookshelf_console"
+            echo "  git mv bin lib test pubspec.yaml pubspec.lock analysis_options.yaml bookshelf_console/"
+            echo "  git commit -m 'Перенести проект в bookshelf_console/'"
+          else
+            echo "Содержимое корня репозитория:"
+            ls -A
+          fi
+          exit 1
+
       # Версия закреплена намеренно. Если её не фиксировать, CI будет
       # обновляться сам и разойдётся с тем, что стоит у студентов: правила
       # dart format между версиями меняются, и работа, отформатированная
